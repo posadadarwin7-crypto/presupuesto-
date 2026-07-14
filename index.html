@@ -2,102 +2,67 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestor de Presupuestos PRO</title>
+    <title>Sistema Cloud Presupuestos</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "presupuesto-4961d.firebaseapp.com",
+            projectId: "presupuesto-4961d",
+            storageBucket: "presupuesto-4961d.firebasestorage.app",
+            messagingSenderId: "795833178613",
+            appId: "1:795833178613:web:52322f0fa981766bac68bc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // Lógica de Login
+        window.login = () => signInWithPopup(auth, provider);
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('appSection').classList.remove('hidden');
+            }
+        });
+
+        // Guardar Inventario en Firestore
+        window.saveInventario = async () => {
+            const ean = document.getElementById('inv_ean').value;
+            const desc = document.getElementById('inv_art').value;
+            const precio = parseFloat(document.getElementById('inv_precio').value);
+            
+            await addDoc(collection(db, "inventario"), { ean, desc, precio, uid: auth.currentUser.uid });
+            alert("Artículo guardado en la nube");
+        };
+    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100">
 
-    <header class="bg-white p-4 shadow flex justify-between items-center">
-        <h1 class="text-xl font-bold">Sistema Comercial</h1>
-        <button onclick="showSection('config')" class="text-2xl">⚙️</button>
-    </header>
-
-    <div class="max-w-4xl mx-auto p-6">
-        <nav class="flex gap-4 mb-6">
-            <button onclick="showSection('presupuesto')" class="bg-blue-500 text-white px-4 py-2 rounded">Nuevo Presupuesto</button>
-            <button onclick="showSection('clientes')" class="bg-gray-200 px-4 py-2 rounded">Clientes</button>
-            <button onclick="showSection('inventario')" class="bg-gray-200 px-4 py-2 rounded">Inventario</button>
-        </nav>
-
-        <div id="content">
-            <section id="config" class="hidden bg-white p-6 rounded shadow">
-                <h2 class="text-xl font-bold mb-4">Configuración Empresa</h2>
-                <input type="text" id="e_nombre" placeholder="Nombre Empresa" class="border p-2 w-full mb-2">
-                <input type="text" id="e_logo" placeholder="URL Logo (Imagen)" class="border p-2 w-full mb-2">
-                <textarea id="e_notas" placeholder="Notas de garantía..." class="border p-2 w-full h-20 mb-2"></textarea>
-                <button onclick="saveEmpresa()" class="bg-green-600 text-white p-2 w-full">Guardar Configuración</button>
-            </section>
-
-            <section id="presupuesto">
-                <div class="bg-white p-6 rounded shadow">
-                    <input type="text" id="buscador" onkeyup="filtrar()" placeholder="🔍 Buscar cliente o artículo..." class="border p-2 w-full mb-4">
-                    <div id="resultadoBusqueda" class="mb-4"></div>
-                    <table class="w-full border">
-                        <tbody id="itemsPresupuesto"></tbody>
-                    </table>
-                    <div class="mt-4 text-right">
-                        <p>Total + 19% IVA: <span id="totalFinal" class="font-bold text-2xl">$0</span></p>
-                    </div>
-                </div>
-            </section>
-
-            <section id="inventario" class="hidden bg-white p-6 rounded shadow">
-                <h2 class="text-xl font-bold mb-4">Inventario</h2>
-                <input type="text" id="inv_ean" placeholder="Código EAN" class="border p-2 w-full mb-2">
-                <input type="text" id="inv_art" placeholder="Descripción" class="border p-2 w-full mb-2">
-                <input type="number" id="inv_precio" placeholder="Precio" class="border p-2 w-full mb-2">
-                <button onclick="saveInventario()" class="bg-purple-600 text-white p-2 w-full">Agregar al Inventario</button>
-            </section>
-        </div>
+    <div id="loginSection" class="h-screen flex items-center justify-center">
+        <button onclick="login()" class="bg-white p-4 shadow rounded border font-bold">Iniciar sesión con Google</button>
     </div>
 
-    <script>
-        // Carga Inicial desde LocalStorage
-        let db = JSON.parse(localStorage.getItem('sistemaData')) || { empresa: {}, clientes: [], inv: [] };
+    <div id="appSection" class="hidden max-w-4xl mx-auto p-6">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Panel Principal</h1>
+            <button onclick="alert('Ir a Configuración')" class="text-2xl">⚙️</button>
+        </header>
 
-        function showSection(id) {
-            document.querySelectorAll('#content > section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-        }
-
-        function saveEmpresa() {
-            db.empresa = { nombre: document.getElementById('e_nombre').value, logo: document.getElementById('e_logo').value, notas: document.getElementById('e_notas').value };
-            localStorage.setItem('sistemaData', JSON.stringify(db));
-            alert("Configuración guardada");
-        }
-
-        function saveInventario() {
-            db.inv.push({ ean: document.getElementById('inv_ean').value, desc: document.getElementById('inv_art').value, precio: document.getElementById('inv_precio').value });
-            localStorage.setItem('sistemaData', JSON.stringify(db));
-            alert("Artículo guardado");
-        }
-
-        function filtrar() {
-            const query = document.getElementById('buscador').value.toLowerCase();
-            const res = document.getElementById('resultadoBusqueda');
-            res.innerHTML = "";
-            // Filtra artículos del inventario que coincidan con la búsqueda
-            db.inv.filter(i => i.desc.toLowerCase().includes(query) || i.ean.includes(query)).forEach(item => {
-                res.innerHTML += `<div class="p-2 border-b cursor-pointer hover:bg-gray-100" onclick="agregarAlPresupuesto('${item.desc}', ${item.precio})">${item.ean} - ${item.desc} ($${item.precio})</div>`;
-            });
-        }
-
-        let carrito = [];
-        function agregarAlPresupuesto(desc, precio) {
-            carrito.push({desc, precio});
-            renderCarrito();
-        }
-
-        function renderCarrito() {
-            const body = document.getElementById('itemsPresupuesto');
-            body.innerHTML = '';
-            let sub = 0;
-            carrito.forEach(i => {
-                sub += i.precio;
-                body.innerHTML += `<tr><td class="p-2">${i.desc}</td><td>$${i.precio}</td></tr>`;
-            });
-            document.getElementById('totalFinal').innerText = "$" + (sub * 1.19).toFixed(2);
-        }
-    </script>
+        <div class="bg-white p-6 rounded shadow mb-6">
+            <h2 class="font-bold mb-4">Añadir al Inventario</h2>
+            <input type="text" id="inv_ean" placeholder="EAN" class="border p-2 w-full mb-2">
+            <input type="text" id="inv_art" placeholder="Descripción" class="border p-2 w-full mb-2">
+            <input type="number" id="inv_precio" placeholder="Precio" class="border p-2 w-full mb-2">
+            <button onclick="saveInventario()" class="bg-blue-600 text-white p-2 w-full">Guardar en Firebase</button>
+        </div>
+    </div>
 </body>
 </html>
