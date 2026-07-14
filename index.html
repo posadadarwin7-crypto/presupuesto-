@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Presupuestos Profesional</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-hover: #172554;
+            --accent: #0ea5e9;
+            --background: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* HEADER & TOP BAR */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .config-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .config-btn:hover {
+            background-color: var(--border);
+            transform: rotate(45deg);
+        }
+
+        /* TABS NAV */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #e2e8f0;
+            padding: 5px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-light);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--card);
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* CARDS & LAYOUTS */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* FORMS & INPUTS */
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.btn-danger {
+            background-color: var(--danger);
+        }
+
+        button.btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        /* SEARCH SUGGESTIONS */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .search-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* BUDGET PREVIEW AREA */
+        .preview-pane {
+            border: 1px solid var(--border);
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            margin-top: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+        }
+
+        .preview-logo {
+            max-width: 150px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .preview-company-info {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .preview-company-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .preview-bill-to {
+            margin-bottom: 30px;
+        }
+
+        .preview-bill-to h4 {
+            margin: 0 0 10px 0;
+            color: var(--primary);
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .preview-client-details {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .totals-section {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-table {
+            width: 300px;
+        }
+
+        .totals-table td {
+            padding: 6px 10px;
+            border-bottom: none;
+        }
+
+        .totals-table tr.grand-total {
+            border-top: 2px solid var(--primary);
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .warranty-box {
+            margin-top: 40px;
+            padding: 15px;
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #78350f;
+        }
+
+        /* CONFIG MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--card);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .close-modal:hover {
+            color: var(--text);
+        }
+
+        .logo-upload-area {
+            border: 2px dashed var(--border);
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .logo-upload-area:hover {
+            border-color: var(--accent);
+        }
+
+        /* UTILITIES */
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* PRINT OPTIMIZATION */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #budget-print-area, #budget-print-area * {
+                visibility: visible;
+            }
+            #budget-print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 0;
+                border: none;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>💼 Gestor de Presupuestos</h1>
+        <div class="header-actions">
+            <button class="config-btn" onclick="openConfigModal()" title="Configuración de la Empresa">⚙️</button>
+        </div>
+    </div>
+
+    <div class="tabs no-print">
+        <button class="tab active" onclick="switchTab('tab-presupuesto', this)">Crear Presupuesto</button>
+        <button class="tab" onclick="switchTab('tab-clientes', this)">Clientes</button>
+        <button class="tab" onclick="switchTab('tab-inventario', this)">Inventario</button>
+    </div>
+
+    <div id="tab-clientes" class="tab-content no-print">
+        <div class="grid-2">
+            <div class="card">
+                <h3>Añadir Nuevo Cliente</h3>
+                <form id="form-cliente" onsubmit="guardarCliente(event)">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>NIT / Documento</label>
+                            <input type="text" id="cli-nit" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="cli-nombre" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Dirección</label>
+                        <input type="text" id="cli-dir" required>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Código Postal</label>
+                            <input type="text" id="cli-cp">
+                        </div>
+                        <div class="form-group">
+                            <label>Ciudad</label>
+                            <input type="text" id="cli-ciudad" required>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" id="cli-tel" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="cli-email" required>
+                        </div>
+                    </div>
+                    <button type="submit">Guardar Cliente</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Clientes Registrados</h3>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NIT</th>
+                                <th>Nombre</th>
+                                <th>Teléfono</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-clientes"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-inventario" class="tab-content no-print">
+        <div class="grid-2">
+            <div class="card">
+                <h3>Añadir Artículo al Inventario</h3>
+                <form id="form-inventario" onsubmit="guardarInventario(event)">
+                    <div class="form-group">
+                        <label>Código EAN / Barras</label>
+                        <input type="text" id="inv-ean" placeholder="Ej: 7701234567890" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción / Nombre del Artículo</label>
+                        <input type="text" id="inv-descripcion" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio Unitario (Sin IVA)</label>
+                        <input type="number" id="inv-precio" step="0.01" required>
+                    </div>
+                    <button type="submit">Guardar Artículo</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Inventario Disponible</h3>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>EAN</th>
+                                <th>Descripción</th>
+                                <th>Precio (Sin IVA)</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-inventario"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-presupuesto" class="tab-content active">
+        <div class="card no-print">
+            <h3>Búsqueda y Selección</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>🔍 Buscar Cliente (Nombre o NIT)</label>
+                    <input type="text" id="buscar-cliente-input" placeholder="Escriba para buscar..." oninput="buscarCliente(this.value)">
+                    <div id="resultados-clientes" class="search-results"></div>
+                    <div id="cliente-seleccionado-badge" style="margin-top:10px; display:none; background:#f0fdf4; padding:10px; border-radius:6px; border:1px solid #bbf7d0;">
+                        <strong>Cliente Seleccionado:</strong> <span id="cli-sel-nombre"></span> (<span id="cli-sel-nit"></span>)
+                        <button type="button" class="btn-danger" style="padding: 2px 8px; font-size:11px; margin-left:10px;" onclick="deseleccionarCliente()">Quitar</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🔍 Buscar Artículo (EAN o Descripción)</label>
+                    <input type="text" id="buscar-articulo-input" placeholder="Escriba o escanee EAN..." oninput="buscarArticulo(this.value)">
+                    <div id="resultados-articulos" class="search-results"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-pane" id="budget-print-area">
+            <div class="preview-header">
+                <div>
+                    <img id="pres-logo" class="preview-logo" src="" alt="Logo Empresa" style="display: none;">
+                    <div id="pres-logo-placeholder" style="font-style: italic; color: var(--text-light); font-size: 12px; display: block;">[Sin Logo Cargado]</div>
+                </div>
+                <div class="preview-company-info">
+                    <div class="preview-company-name" id="pres-emp-nombre">Mi Empresa S.A.S</div>
+                    <div>NIT: <span id="pres-emp-nit">-</span></div>
+                    <div>Dirección: <span id="pres-emp-dir">-</span> <span id="pres-emp-cp"></span></div>
+                    <div>Ciudad: <span id="pres-emp-ciudad">-</span></div>
+                    <div>Tel: <span id="pres-emp-tel">-</span> | Email: <span id="pres-emp-email">-</span></div>
+                </div>
+            </div>
+
+            <div class="flex-between">
+                <div class="preview-bill-to">
+                    <h4>Presupuesto Para:</h4>
+                    <div class="preview-client-details" id="pres-cliente-info">
+                        <em>Seleccione un cliente arriba para visualizar sus datos en el documento final.</em>
+                    </div>
+                </div>
+                <div style="text-align: right; font-size: 13px;">
+                    <strong>Fecha:</strong> <span id="pres-fecha">-</span><br>
+                    <strong>Validez:</strong> 15 días
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%">EAN</th>
+                        <th>Descripción</th>
+                        <th style="width: 10%; text-align: center;">Cant.</th>
+                        <th style="width: 15%; text-align: right;">Precio Unit.</th>
+                        <th style="width: 15%; text-align: right;">Total (Sin IVA)</th>
+                        <th class="no-print" style="width: 10%; text-align: center;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="pres-items-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-light); font-style: italic;">No se han agregado artículos al presupuesto.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="totals-section">
+                <table class="totals-table">
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td style="text-align: right;">$<span id="pres-subtotal">0.00</span></td>
+                    </tr>
+                    <tr>
+                        <td>IVA (19%):</td>
+                        <td style="text-align: right;">$<span id="pres-iva">0.00</span></td>
+                    </tr>
+                    <tr class="grand-total">
+                        <td>Total Final:</td>
+                        <td style="text-align: right;">$<span id="pres-total">0.00</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="warranty-box" id="pres-garantia-box" style="display:none;">
+                <strong>Condiciones de Garantía y Notas:</strong>
+                <div id="pres-garantia-texto" style="white-space: pre-wrap; margin-top: 5px;"></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;" class="no-print">
+            <button onclick="window.print()" style="background-color: var(--accent); padding: 12px 25px;">🖨️ Imprimir o Guardar PDF</button>
+        </div>
+    </div>
+</div>
+
+<div id="config-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeConfigModal()">&times;</span>
+        <h3 style="color: var(--primary); margin-top: 0;">⚙️ Configuración de la Empresa</h3>
+        
+        <form id="form-config" onsubmit="guardarConfiguracion(event)">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>NIT Empresa</label>
+                    <input type="text" id="cfg-nit" required>
+                </div>
+                <div class="form-group">
+                    <label>Nombre de la Empresa</label>
+                    <input type="text" id="cfg-nombre" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Dirección Comercial</label>
+                <input type="text" id="cfg-dir" required>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Código Postal</label>
+                    <input type="text" id="cfg-cp">
+                </div>
+                <div class="form-group">
+                    <label>Ciudad</label>
+                    <input type="text" id="cfg-ciudad" required>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Teléfono de Contacto</label>
+                    <input type="tel" id="cfg-tel" required>
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="cfg-email" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Logo de la Empresa</label>
+                <div class="logo-upload-area" onclick="document.getElementById('cfg-logo-file').click()">
+                    <span>📁 Haz clic aquí para subir tu Logo</span>
+                    <input type="file" id="cfg-logo-file" accept="image/*" style="display: none;" onchange="procesarLogo(this)">
+                </div>
+                <div style="text-align: center;">
+                    <img id="cfg-logo-preview" src="" alt="Vista previa del logo" style="max-height: 70px; display: none; margin: 10px auto;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Notas de Garantía y Exclusiones</label>
+                <textarea id="cfg-notas" rows="4" placeholder="Ej: Garantía de 12 meses por defectos de fábrica. Excluye daños físicos o descargas eléctricas."></textarea>
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="submit" style="background-color: var(--success);">Guardar Configuración</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // STATE DATA (Loaded from LocalStorage)
+    let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
+    let empresa = JSON.parse(localStorage.getItem('empresa')) || {
+        nit: '', nombre: '', dir: '', cp: '', ciudad: '', tel: '', email: '', logo: '', notas: ''
+    };
+
+    // Budget Active State
+    let itemsPresupuesto = [];
+    let clienteSeleccionado = null;
+
+    // INITIALIZATION
+    window.onload = function() {
+        // Set date to today
+        const hoy = new Date();
+        document.getElementById('pres-fecha').innerText = hoy.toLocaleDateString('es-ES');
+        
+        actualizarTablaClientes();
+        actualizarTablaInventario();
+        rellenarFormularioConfig();
+        actualizarVistaPreviaEmpresa();
+        actualizarTablaPresupuesto();
+    };
+
+    // SWITCH TABS
+    function switchTab(tabId, element) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    // MODAL CONTROL
+    function openConfigModal() {
+        document.getElementById('config-modal').style.display = 'block';
+    }
+
+    function closeConfigModal() {
+        document.getElementById('config-modal').style.display = 'none';
+    }
+
+    // PROCESS COMPANY LOGO IMAGE TO BASE64
+    function procesarLogo(input) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Image = e.target.result;
+                document.getElementById('cfg-logo-preview').src = base64Image;
+                document.getElementById('cfg-logo-preview').style.display = 'block';
+                // temporary save into a dataset
+                document.getElementById('cfg-logo-preview').dataset.base64 = base64Image;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // SAVE & LOAD COMPANY CONFIG
+    function rellenarFormularioConfig() {
+        document.getElementById('cfg-nit').value = empresa.nit || '';
+        document.getElementById('cfg-nombre').value = empresa.nombre || '';
+        document.getElementById('cfg-dir').value = empresa.dir || '';
+        document.getElementById('cfg-cp').value = empresa.cp || '';
+        document.getElementById('cfg-ciudad').value = empresa.ciudad || '';
+        document.getElementById('cfg-tel').value = empresa.tel || '';
+        document.getElementById('cfg-email').value = empresa.email || '';
+        document.getElementById('cfg-notas').value = empresa.notas || '';
+        
+        if (empresa.logo) {
+            const imgPreview = document.getElementById('cfg-logo-preview');
+            imgPreview.src = empresa.logo;
+            imgPreview.style.display = 'block';
+            imgPreview.dataset.base64 = empresa.logo;
+        }
+    }
+
+    function guardarConfiguracion(event) {
+        event.preventDefault();
+        
+        const previewImg = document.getElementById('cfg-logo-preview');
+        
+        empresa = {
+            nit: document.getElementById('cfg-nit').value,
+            nombre: document.getElementById('cfg-nombre').value,
+            dir: document.getElementById('cfg-dir').value,
+            cp: document.getElementById('cfg-cp').value,
+            ciudad: document.getElementById('cfg-ciudad').value,
+            tel: document.getElementById('cfg-tel').value,
+            email: document.getElementById('cfg-email').value,
+            logo: previewImg.dataset.base64 || '',
+            notas: document.getElementById('cfg-notas').value
+        };
+
+        localStorage.setItem('empresa', JSON.stringify(empresa));
+        actualizarVistaPreviaEmpresa();
+        closeConfigModal();
+        alert('Configuración de empresa guardada correctamente.');
+    }
+
+    function actualizarVistaPreviaEmpresa() {
+        document.getElementById('pres-emp-nombre').innerText = empresa.nombre || 'Mi Empresa S.A.S';
+        document.getElementById('pres-emp-nit').innerText = empresa.nit || '-';
+        document.getElementById('pres-emp-dir').innerText = empresa.dir || '-';
+        document.getElementById('pres-emp-cp').innerText = empresa.cp || '';
+        document.getElementById('pres-emp-ciudad').innerText = empresa.ciudad || '-';
+        document.getElementById('pres-emp-tel').innerText = empresa.tel || '-';
+        document.getElementById('pres-emp-email').innerText = empresa.email || '-';
+
+        // Logo configuration
+        const logoImg = document.getElementById('pres-logo');
+        const logoPlaceholder = document.getElementById('pres-logo-placeholder');
+        if (empresa.logo) {
+            logoImg.src = empresa.logo;
+            logoImg.style.display = 'block';
+            logoPlaceholder.style.display = 'none';
+        } else {
+            logoImg.style.display = 'none';
+            logoPlaceholder.style.display = 'block';
+        }
+
+        // Warranty note configuration
+        const garantiaBox = document.getElementById('pres-garantia-box');
+        const garantiaTexto = document.getElementById('pres-garantia-texto');
+        if (empresa.notas) {
+            garantiaTexto.innerText = empresa.notas;
+            garantiaBox.style.display = 'block';
+        } else {
+            garantiaBox.style.display = 'none';
+        }
+    }
+
+    // --- CLIENTS MODULE ---
+    function guardarCliente(event) {
+        event.preventDefault();
+        const nuevoCliente = {
+            nit: document.getElementById('cli-nit').value,
+            nombre: document.getElementById('cli-nombre').value,
+            dir: document.getElementById('cli-dir').value,
+            cp: document.getElementById('cli-cp').value,
+            ciudad: document.getElementById('cli-ciudad').value,
+            tel: document.getElementById('cli-tel').value,
+            email: document.getElementById('cli-email').value
+        };
+
+        // Check duplicates
+        if (clientes.some(c => c.nit === nuevoCliente.nit)) {
+            alert('Ya existe un cliente registrado con ese NIT.');
+            return;
+        }
+
+        clientes.push(nuevoCliente);
+        localStorage.setItem('clientes', JSON.stringify(clientes));
+        actualizarTablaClientes();
+        document.getElementById('form-cliente').reset();
+        alert('Cliente guardado con éxito.');
+    }
+
+    function eliminarCliente(nit) {
+        if (confirm('¿Está seguro de que desea eliminar este cliente?')) {
+            clientes = clientes.filter(c => c.nit !== nit);
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            actualizarTablaClientes();
+            if (clienteSeleccionado && clienteSeleccionado.nit === nit) {
+                deseleccionarCliente();
+            }
+        }
+    }
+
+    function actualizarTablaClientes() {
+        const tbody = document.getElementById('tabla-clientes');
+        tbody.innerHTML = '';
+        clientes.forEach(c => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${c.nit}</td>
+                    <td><strong>${c.nombre}</strong></td>
+                    <td>${c.tel}</td>
+                    <td>
+                        <button class="btn-danger" style="padding: 5px 10px; font-size:12px;" onclick="eliminarCliente('${c.nit}')">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // --- INVENTORY MODULE ---
+    function guardarInventario(event) {
+        event.preventDefault();
+        const nuevoArticulo = {
+            ean: document.getElementById('inv-ean').value.trim(),
+            descripcion: document.getElementById('inv-descripcion').value.trim(),
+            precio: parseFloat(document.getElementById('inv-precio').value)
+        };
+
+        // Check duplicate EAN
+        if (inventario.some(item => item.ean === nuevoArticulo.ean)) {
+            alert('Ya existe un artículo con este código EAN en el inventario.');
+            return;
+        }
+
+        inventario.push(nuevoArticulo);
+        localStorage.setItem('inventario', JSON.stringify(inventario));
+        actualizarTablaInventario();
+        document.getElementById('form-inventario').reset();
+        alert('Artículo guardado en inventario.');
+    }
+
+    function eliminarArticulo(ean) {
+        if (confirm('¿Desea eliminar este artículo del inventario?')) {
+            inventario = inventario.filter(item => item.ean !== ean);
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            actualizarTablaInventario();
+        }
+    }
+
+    function actualizarTablaInventario() {
+        const tbody = document.getElementById('tabla-inventario');
+        tbody.innerHTML = '';
+        inventario.forEach(item => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><code>${item.ean}</code></td>
+                    <td>${item.descripcion}</td>
+                    <td>$${item.precio.toFixed(2)}</td>
+                    <td>
+                        <button class="btn-danger" style="padding: 5px 10px; font-size:12px;" onclick="eliminarArticulo('${item.ean}')">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // --- BUDGET LOGIC (SEARCH & CALCULATION) ---
+
+    // CLIENT SEARCH INTERACTIVE
+    function buscarCliente(valor) {
+        const container = document.getElementById('resultados-clientes');
+        if (!valor) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        const filtrados = clientes.filter(c => 
+            c.nombre.toLowerCase().includes(valor.toLowerCase()) || 
+            c.nit.toLowerCase().includes(valor.toLowerCase())
+        );
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<div class="search-item" style="color:var(--text-light); cursor:default;">No se encontraron clientes</div>';
+        } else {
+            container.innerHTML = filtrados.map(c => `
+                <div class="search-item" onclick="seleccionarCliente('${c.nit}')">
+                    <strong>${c.nombre}</strong> <span style="font-size:11px; color:var(--text-light)">NIT: ${c.nit}</span>
+                </div>
+            `).join('');
+        }
+        container.style.display = 'block';
+    }
+
+    function seleccionarCliente(nit) {
+        const match = clientes.find(c => c.nit === nit);
+        if (match) {
+            clienteSeleccionado = match;
+            document.getElementById('buscar-cliente-input').value = '';
+            document.getElementById('resultados-clientes').style.display = 'none';
+            
+            // Show selection badge
+            document.getElementById('cli-sel-nombre').innerText = match.nombre;
+            document.getElementById('cli-sel-nit').innerText = match.nit;
+            document.getElementById('cliente-seleccionado-badge').style.display = 'block';
+
+            // Render on invoice
+            document.getElementById('pres-cliente-info').innerHTML = `
+                <strong>${match.nombre}</strong><br>
+                NIT / Doc: ${match.nit}<br>
+                Dirección: ${match.dir} ${match.cp ? '(CP: ' + match.cp + ')' : ''}<br>
+                Ciudad: ${match.ciudad}<br>
+                Tel: ${match.tel} | Email: ${match.email}
+            `;
+        }
+    }
+
+    function deseleccionarCliente() {
+        clienteSeleccionado = null;
+        document.getElementById('cliente-seleccionado-badge').style.display = 'none';
+        document.getElementById('pres-cliente-info').innerHTML = `
+            <em>Seleccione un cliente arriba para visualizar sus datos en el documento final.</em>
+        `;
+    }
+
+    // ARTICLE SEARCH INTERACTIVE
+    function buscarArticulo(valor) {
+        const container = document.getElementById('resultados-articulos');
+        if (!valor) {
+            container.style.display = 'none';
+            return;
+        }
+
+        const filtrados = inventario.filter(item => 
+            item.descripcion.toLowerCase().includes(valor.toLowerCase()) || 
+            item.ean.toLowerCase().includes(valor.toLowerCase())
+        );
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<div class="search-item" style="color:var(--text-light); cursor:default;">No se encontraron artículos</div>';
+        } else {
+            container.innerHTML = filtrados.map(item => `
+                <div class="search-item" onclick="agregarArticuloPresupuesto('${item.ean}')">
+                    <strong>${item.descripcion}</strong> <br>
+                    <span style="font-size:11px; color:var(--text-light)">EAN: ${item.ean} | Precio: $${item.precio.toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+        container.style.display = 'block';
+    }
+
+    function agregarArticuloPresupuesto(ean) {
+        const item = inventario.find(i => i.ean === ean);
+        if (item) {
+            // Check if already added
+            const yaAgregado = itemsPresupuesto.find(p => p.ean === ean);
+            if (yaAgregado) {
+                yaAgregado.cantidad += 1;
+            } else {
+                itemsPresupuesto.push({
+                    ean: item.ean,
+                    descripcion: item.descripcion,
+                    precio: item.precio,
+                    cantidad: 1
+                });
+            }
+
+            document.getElementById('buscar-articulo-input').value = '';
+            document.getElementById('resultados-articulos').style.display = 'none';
+            actualizarTablaPresupuesto();
+        }
+    }
+
+    function modificarCantidad(index, cantidad) {
+        const cant = parseInt(cantidad);
+        if (cant > 0) {
+            itemsPresupuesto[index].cantidad = cant;
+        } else {
+            itemsPresupuesto[index].cantidad = 1;
+        }
+        actualizarTablaPresupuesto();
+    }
+
+    function eliminarArticuloPresupuesto(index) {
+        itemsPresupuesto.splice(index, 1);
+        actualizarTablaPresupuesto();
+    }
+
+    function actualizarTablaPresupuesto() {
+        const tbody = document.getElementById('pres-items-tbody');
+        tbody.innerHTML = '';
+
+        if (itemsPresupuesto.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-light); font-style: italic;">No se han agregado artículos al presupuesto.</td>
+                </tr>
+            `;
+            calcularTotales(0);
+            return;
+        }
+
+        let subtotalAcumulado = 0;
+
+        itemsPresupuesto.forEach((item, index) => {
+            const totalFila = item.precio * item.cantidad;
+            subtotalAcumulado += totalFila;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><code>${item.ean}</code></td>
+                    <td>${item.descripcion}</td>
+                    <td style="text-align: center;">
+                        <input class="no-print" type="number" min="1" value="${item.cantidad}" onchange="modificarCantidad(${index}, this.value)" style="width: 60px; text-align: center; padding:4px;">
+                        <span class="print-only" style="display:none;">${item.cantidad}</span>
+                    </td>
+                    <td style="text-align: right;">$${item.precio.toFixed(2)}</td>
+                    <td style="text-align: right;">$${totalFila.toFixed(2)}</td>
+                    <td class="no-print" style="text-align: center;">
+                        <button class="btn-danger" style="padding: 4px 8px; font-size:12px;" onclick="eliminarArticuloPresupuesto(${index})">Quitar</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Hide inputs in standard HTML layout during print (CSS print rule covers it but styling fallback)
+        document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
+
+        calcularTotales(subtotalAcumulado);
+    }
+
+    function calcularTotales(subtotal) {
+        const iva = subtotal * 0.19;
+        const total = subtotal + iva;
+
+        document.getElementById('pres-subtotal').innerText = subtotal.toFixed(2);
+        document.getElementById('pres-iva').innerText = iva.toFixed(2);
+        document.getElementById('pres-total').innerText = total.toFixed(2);
+    }
+
+    // Close searches when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#buscar-cliente-input')) {
+            document.getElementById('resultados-clientes').style.display = 'none';
+        }
+        if (!event.target.closest('#buscar-articulo-input')) {
+            document.getElementById('resultados-articulos').style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>
